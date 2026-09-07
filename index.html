@@ -11,6 +11,8 @@
   --ink:#0E2226; --ink-2:#3D5559; --muted:#7C9093;
   --rule:#C9D6D5; --rule-soft:#DEE7E6;
   --teal:#0F6A6A; --teal-soft:#B9D4D2; --amber:#D98A1F;
+  --c-hit:#C2612F;    /* 已達門檻：橘 */
+  --c-miss:#0F6A6A;   /* 未達門檻：綠 */
   --mono:"SF Mono",SFMono-Regular,ui-monospace,Consolas,"Roboto Mono","Noto Sans Mono",monospace;
   --sans:"PingFang TC","Noto Sans TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
@@ -70,9 +72,10 @@ body.admin h1::after{content:"管理模式";font-family:var(--mono);font-size:10
   align-items:center;padding:7px 0;position:relative}
 .hrow .nm{font-size:14px;line-height:1.35;text-align:right;color:var(--ink)}
 .hrow .tr{height:22px;background:transparent;border-left:1px solid transparent}
-.hrow .fl{display:block;height:100%;background:var(--teal);border-radius:0 2px 2px 0;
+.hrow .fl{display:block;height:100%;background:var(--c-hit);border-radius:0 2px 2px 0;
   transform-origin:left;animation:grow .55s cubic-bezier(.2,.7,.3,1) both}
-.hrow.lead .fl{background:var(--amber)}
+.hrow.rest .fl{background:var(--c-miss)}
+.hrow.rest .nu{color:var(--ink)}
 .hrow .nu{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:16px;
   font-weight:600;color:var(--ink)}
 .hrow .nu small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px}
@@ -248,6 +251,9 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 let DATA=JSON.parse($("data").textContent);
 let EDIT=false;
 
+/* 報名達 THRESHOLD 人以上用主色，未達的用灰色 */
+const THRESHOLD=10;
+
 function render(){
   $("title").textContent=DATA.title;
   document.title=DATA.title+" 報名人數";
@@ -275,10 +281,10 @@ function niceMax(v,ticks){
 }
 
 function drawChart(view,max){
-  const ticks=4, top=niceMax(max,ticks);
+  const ticks=4, top=niceMax(Math.max(max,THRESHOLD),ticks);
   const grid='<div class="grid">'+Array.from({length:ticks+1},()=>"<i></i>").join("")+'</div>';
   const rows=view.map((x,k)=>`
-    <div class="hrow${x.c===max&&max>0?" lead":""}${x.c===0?" zero":""}">
+    <div class="hrow${x.c>=THRESHOLD?"":" rest"}${x.c===0?" zero":""}">
       <span class="nm">${esc(x.n)}</span>
       <span class="tr"><span class="fl" style="width:${(x.c/top*100).toFixed(2)}%;animation-delay:${k*30}ms"></span></span>
       <span class="nu">${x.c}<small>人</small></span>
